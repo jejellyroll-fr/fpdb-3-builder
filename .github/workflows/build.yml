@@ -1,0 +1,60 @@
+name: Build Projects
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive  # Récupérer également les sous-modules imbriqués
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11.9'
+
+    - name: Build projects
+      run: |
+        chmod +x build.sh
+        ./build.sh
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive  # Récupérer également les sous-modules imbriqués
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11.9'
+
+    - name: Build projects
+      run: |
+        ./build.sh
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive  # Récupérer également les sous-modules imbriqués
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11.9'
+
+    - name: Build projects
+      run: |
+        chmod +x build.sh
+        ./build.sh
