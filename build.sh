@@ -223,7 +223,7 @@ FILES=(
     "win_table_detect.py"
     "xlib_tester.py"
     "XTables.py"
-    "_pokereval_3_11.pyd"
+    "_pokereval_3_11.*"
 )
 
 FOLDERS=(
@@ -259,6 +259,10 @@ generate_pyinstaller_command() {
             command+=" --add-data \"$BASE_PATH2/$folder:$folder\""
         fi
     done
+
+    if [ "$OS" = "MacOS" ]; then
+        command+=" --icon=\"$BASE_PATH2/gfx/tribal.icns\""
+    fi
 
     command+=" \"$BASE_PATH2\\$script_path\""
     echo "$command"
@@ -304,11 +308,17 @@ copy_hudmain() {
     local source_dir=$1
     local target_dir=$2
 
-    local hud_main_exe="$source_dir/HUD_main.exe"
-    local target_exe="$target_dir/HUD_main.exe"
+    local hud_main_exe="$source_dir/HUD_main"
+    if [ "$OS" = "Windows" ]; then
+        hud_main_exe="$source_dir/HUD_main.exe"
+    fi
+    local target_exe="$target_dir/HUD_main"
+    if [ "$OS" = "Windows" ]; then
+        target_exe="$target_dir/HUD_main.exe"
+    fi
 
     if [ ! -e "$target_exe" ]; then
-        echo "Copie de HUD_main.exe de $hud_main_exe à $target_exe"
+        echo "Copie de HUD_main de $hud_main_exe à $target_exe"
         cp "$hud_main_exe" "$target_exe"
     fi
 
@@ -371,13 +381,172 @@ if [[ "$OS" == "Windows" ]]; then
 
     echo "Processus de build et de copie terminé."
 
+elif [[ "$OS" == "Linux" ]]; then
+    # Téléchargement de appimagetool
+    if [ ! -f ./appimagetool-x86_64.AppImage ]; then
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
+    fi
+
+    # Convertir tribal.jpg en fpdb.png si nécessaire
+    if [ ! -f "$BASE_PATH/gfx/fpdb.png" ]; then
+        if [ -f "$BASE_PATH/gfx/tribal.jpg" ]; then
+            magick convert "$BASE_PATH/gfx/tribal.jpg" "$BASE_PATH/gfx/fpdb.png"
+        else
+            echo "Erreur : tribal.jpg non trouvé dans $BASE_PATH/gfx/"
+            exit 1
+        fi
+    fi
+
+    # Build HUD_main
+    command=$(generate_pyinstaller_command "$SECOND_SCRIPT")
+    echo "Exécution : $command"
+    eval "$command"
+
+    # Build fpdb
+    command=$(generate_pyinstaller_command "$MAIN_SCRIPT")
+    echo "Exécution : $command"
+    eval "$command"
+
+    # Création de l'AppImage
+    APP_DIR="$BASE_PATH/AppDir"
+    mkdir -p "$APP_DIR/usr/bin"
+    mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
+
+    cp -r "$DIST_DIR/fpdb/"* "$APP_DIR/usr/bin/"
+
+    # Copier l'icône en fpdb.png
+    cp "$BASE_PATH/gfx/fpdb.png" "$APP_DIR/usr/share/icons/hicolor/256x256/apps/fpdb.png"
+    cp "$BASE_PATH/gfx/fpdb.png" "$APP_DIR/fpdb.png"
+
+    # Créer un fichier desktop
+    cat <<EOF > "$APP_DIR/fpdb.desktop"
+[Desktop Entry]
+Name=fpdb
+Exec=fpdb
+Icon=fpdb
+Type=Application
+Categories=Utility;
+EOF
+
+    # Création du fichier AppRun
+    cat <<'EOF' > "$APP_DIR/AppRun"
+#!/bin/bash
+HERE="$(dirname "$(readlink -f "${0}")")"
+export PYTHONPATH="$HERE/usr/bin"
+exec "$HERE/usr/bin/fpdb"
+EOF
+
+    chmod +x "$APP_DIR/AppRun"
+
+    # Créer l'AppImage avec un nom personnalisé en spécifiant l'architecture
+    ARCH=x86_64 ./appimagetool-x86_64.AppImage "$APP_DIR" fpdb-x86_64.AppImage
+
 elif [[ "$OS" == "MacOS" ]]; then
-    # Commands for MacOS (à remplir si nécessaire)
-    echo "Building for MacOS not implemented yet."
-else
-    # Commands for Linux (à remplir si nécessaire)
-    echo "Building for Linux not implemented yet."
+    # Build HUD_main
+    command=$(generate_pyinstaller_command "$SECOND_SCRIPT")
+    echo "Exécution : $command"
+    eval "$command"
+
+    # Build fpdb
+    command=$(generate_pyinstaller_command "$MAIN_SCRIPT")
+    echo "Exécution : $command"
+    eval "$command"
+
+    APP_NAME="fpdb3"
+    APP_DIR="$DIST_DIR/$APP_NAME.app/Contents/MacOS"
+    RES_DIR="$DIST_DIR/$APP_NAME.app/Contents/Resources"
+
+    # Create AppDir structure
+    mkdir -p "$APP_DIR"
+    mkdir -p "$RES_DIR"
+
+    # Copy built files to AppDir, including the first _internal
+    cp -R "$DIST_DIR/fpdb/"* "$RES_DIR/"
+
+    # Create the nested _internal structure
+    mkdir -p "$RES_DIR/_internal/_internal"
+
+    # Copy the content of the original _internal to the nested _internal
+    cp -R "$DIST_DIR/fpdb/_internal/"* "$RES_DIR/_internal/_internal/"
+
+    # Create launcher script
+    cat <<EOF >"$APP_DIR/$APP_NAME"
+#!/bin/bash
+BASE_DIR="\$(cd "\$(dirname "\$0")/../Resources" && pwd)"
+export DYLD_LIBRARY_PATH="\$BASE_DIR:\$BASE_DIR/_internal:\$DYLD_LIBRARY_PATH"
+export PYTHONHOME="\$BASE_DIR/_internal"
+export PYTHONPATH="\$BASE_DIR:\$BASE_DIR/_internal:\$PYTHONPATH"
+"\$BASE_DIR/fpdb"
+EOF
+
+    chmod +x "$APP_DIR/$APP_NAME"
+
+    # Create Info.plist
+    cat <<EOF >"$DIST_DIR/$APP_NAME.app/Contents/Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>$APP_NAME</string>
+    <key>CFBundleDisplayName</key>
+    <string>$APP_NAME</string>
+    <key>CFBundleExecutable</key>
+    <string>$APP_NAME</string>
+    <key>CFBundleIconFile</key>
+    <string>tribal.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.example.$APP_NAME</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.9</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
+EOF
+
+    # Copy the existing tribal.icns file
+    if [ -f "$BASE_PATH2/gfx/tribal.icns" ]; then
+        cp "$BASE_PATH2/gfx/tribal.icns" "$RES_DIR/tribal.icns"
+    else
+        echo "Warning: tribal.icns not found in gfx folder. Icon will be missing."
+    fi
+
+    # Ensure all files are executable
+    chmod -R 755 "$APP_DIR"
+    chmod -R 755 "$RES_DIR"
+
+    # Remove quarantine attribute
+    xattr -cr "$DIST_DIR/$APP_NAME.app"
+
+    echo "App bundle created successfully."
+    echo "You can now test the app by running:"
+    echo "open \"$DIST_DIR/$APP_NAME.app\""
+
+    # Check dependencies of HUD_main
+    echo "Checking dependencies of HUD_main:"
+    otool -L "$DIST_DIR/$APP_NAME.app/Contents/Resources/_internal/_internal/HUD_main"
+
+    # For ARM build, you might need to use a different Python and PyInstaller version
+    # or use tools like 'arch' to run the build process under Rosetta 2
+    if [[ $(uname -m) == 'arm64' ]]; then
+        echo "Building for ARM64 architecture"
+        # Add any ARM-specific build steps here
+    fi
 fi
 
-echo "All projects built successfully."
+# Clean up build files
+echo "Cleaning up build files..."
+rm -rf "$BASE_PATH/build"
+rm -rf "$DIST_DIR/HUD_main"
 
+echo "All projects built successfully."
