@@ -57,6 +57,7 @@ jobs:
           pip install cmake
       - name: Build projects
         run: |
+          chmod +x build.sh
           ./build.sh
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3

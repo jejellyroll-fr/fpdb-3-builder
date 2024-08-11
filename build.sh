@@ -42,6 +42,7 @@ cd "${BASE_PATH}/pypoker-eval/poker-eval"
 mkdir -p build
 cd build
 if [[ "$OS" == "Windows" ]]; then
+    echo "Running CMake for poker-eval..."
     cmake .. -G "Visual Studio 17 2022" -A x64
     cmake --build . --config Release
 elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
@@ -56,6 +57,7 @@ cd "${BASE_PATH}/pypoker-eval"
 mkdir -p build
 cd build
 if [[ "$OS" == "Windows" ]]; then
+    echo "Running CMake for pypoker-eval..."
     cmake .. -G "Visual Studio 17 2022" -A x64
     cmake --build . --config Release
 elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
