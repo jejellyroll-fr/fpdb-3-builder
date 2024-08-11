@@ -264,7 +264,11 @@ generate_pyinstaller_command() {
         command+=" --icon=\"$BASE_PATH2/gfx/tribal.icns\""
     fi
 
-    command+=" \"$BASE_PATH2\\$script_path\""
+    if [ "$OS" = "Windows" ]; then
+        command+=" \"$BASE_PATH2\\$script_path\""
+    else
+        command+=" \"$BASE_PATH2/$script_path\""
+    fi
     echo "$command"
 }
 
@@ -382,13 +386,23 @@ if [[ "$OS" == "Windows" ]]; then
     echo "Processus de build et de copie terminé."
 
 elif [[ "$OS" == "Linux" ]]; then
+    # Vérification de l'existence des fichiers
+    if [ ! -f "$BASE_PATH/$SECOND_SCRIPT" ]; then
+        echo "Erreur : $SECOND_SCRIPT n'existe pas dans $BASE_PATH"
+        exit 1
+    fi
+    if [ ! -f "$BASE_PATH/$MAIN_SCRIPT" ]; then
+        echo "Erreur : $MAIN_SCRIPT n'existe pas dans $BASE_PATH"
+        exit 1
+    fi
+
     # Téléchargement de appimagetool
     if [ ! -f ./appimagetool-x86_64.AppImage ]; then
         wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
         chmod +x appimagetool-x86_64.AppImage
     fi
 
-    # Convertir tribal.jpg en fpdb.png si nécessaire
+# Convertir tribal.jpg en fpdb.png si nécessaire
     if [ ! -f "$BASE_PATH/gfx/fpdb.png" ]; then
         if [ -f "$BASE_PATH/gfx/tribal.jpg" ]; then
             magick convert "$BASE_PATH/gfx/tribal.jpg" "$BASE_PATH/gfx/fpdb.png"
@@ -409,7 +423,7 @@ elif [[ "$OS" == "Linux" ]]; then
     eval "$command"
 
     # Création de l'AppImage
-APP_DIR="$BASE_PATH/AppDir"
+    APP_DIR="$BASE_PATH/AppDir"
     mkdir -p "$APP_DIR/usr/bin"
     mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
 
@@ -443,6 +457,16 @@ EOF
     ARCH=x86_64 ./appimagetool-x86_64.AppImage "$APP_DIR" fpdb-x86_64.AppImage
 
 elif [[ "$OS" == "MacOS" ]]; then
+    # Vérification de l'existence des fichiers
+    if [ ! -f "$BASE_PATH/$SECOND_SCRIPT" ]; then
+        echo "Erreur : $SECOND_SCRIPT n'existe pas dans $BASE_PATH"
+        exit 1
+    fi
+    if [ ! -f "$BASE_PATH/$MAIN_SCRIPT" ]; then
+        echo "Erreur : $MAIN_SCRIPT n'existe pas dans $BASE_PATH"
+        exit 1
+    fi
+
     # Build HUD_main
     command=$(generate_pyinstaller_command "$SECOND_SCRIPT")
     echo "Exécution : $command"
