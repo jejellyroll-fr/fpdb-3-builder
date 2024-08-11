@@ -64,6 +64,15 @@ elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
 fi
 cd "${BASE_PATH}"
 
+# Copier et renommer pokereval
+if [[ "$OS" == "Windows" ]]; then
+    echo "Renaming and moving pypokereval.dll..."
+    mv "${BASE_PATH}/pypoker-eval/build/Debug/pypokereval.dll" "${BASE_PATH}/_pokereval_3_11.pyd"
+elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
+    echo "Renaming and moving pypokereval.so..."
+    mv "${BASE_PATH}/pypoker-eval/build/pypokereval.so" "${BASE_PATH}/_pokereval_3_11.so"
+fi
+
 # Copier pokereval.py vers le dossier fpdb-3
 echo "Copying pokereval.py to fpdb-3 directory..."
 cp "${BASE_PATH}/pypoker-eval/pokereval.py" "${BASE_PATH}/"
@@ -223,7 +232,6 @@ FILES=(
     "win_table_detect.py"
     "xlib_tester.py"
     "XTables.py"
-    "_pokereval_3_11.*"
 )
 
 FOLDERS=(
@@ -236,6 +244,17 @@ FOLDERS=(
     "templates"
     "utils"
 )
+
+# Function to add pokereval file
+add_pokereval_file() {
+    local command=$1
+    if [ "$OS" = "Windows" ]; then
+        command+=" --add-data \"$BASE_PATH2\_pokereval_3_11.pyd;.\""
+    else
+        command+=" --add-data \"$BASE_PATH2/_pokereval_3_11.so:.\""
+    fi
+    echo "$command"
+}
 
 # Function to generate the pyinstaller command
 generate_pyinstaller_command() {
@@ -250,6 +269,9 @@ generate_pyinstaller_command() {
             command+=" --add-data \"$BASE_PATH2/$file:.\""
         fi
     done
+
+    # Add pokereval file
+    command=$(add_pokereval_file "$command")
 
     # process folders
     for folder in "${FOLDERS[@]}"; do
@@ -349,9 +371,6 @@ echo "PyInstaller will output to: $DIST_DIR"
 pyinstaller --version
 
 if [[ "$OS" == "Windows" ]]; then
-    echo "Renaming and moving pypokereval.dll..."
-    mv "${BASE_PATH}/pypoker-eval/build/Debug/pypokereval.dll" "${BASE_PATH}/_pokereval_3_11.pyd"
-    
     # Generate the pyinstaller command
     command=$(generate_pyinstaller_command "$MAIN_SCRIPT")
     echo "Exécution : $command"
@@ -402,7 +421,7 @@ elif [[ "$OS" == "Linux" ]]; then
         chmod +x appimagetool-x86_64.AppImage
     fi
 
-# Convertir tribal.jpg en fpdb.png si nécessaire
+    # Convertir tribal.jpg en fpdb.png si nécessaire
     if [ ! -f "$BASE_PATH/gfx/fpdb.png" ]; then
         if [ -f "$BASE_PATH/gfx/tribal.jpg" ]; then
             magick convert "$BASE_PATH/gfx/tribal.jpg" "$BASE_PATH/gfx/fpdb.png"
