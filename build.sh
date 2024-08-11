@@ -415,6 +415,13 @@ elif [[ "$OS" == "Linux" ]]; then
         exit 1
     fi
 
+    # Install FUSE if not present
+    if ! dpkg -s libfuse2 >/dev/null 2>&1; then
+        echo "Installing FUSE..."
+        sudo apt-get update
+        sudo apt-get install -y libfuse2
+    fi
+
     # Téléchargement de appimagetool
     if [ ! -f ./appimagetool-x86_64.AppImage ]; then
         wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
@@ -424,7 +431,8 @@ elif [[ "$OS" == "Linux" ]]; then
     # Convertir tribal.jpg en fpdb.png si nécessaire
     if [ ! -f "$BASE_PATH/gfx/fpdb.png" ]; then
         if [ -f "$BASE_PATH/gfx/tribal.jpg" ]; then
-            magick convert "$BASE_PATH/gfx/tribal.jpg" "$BASE_PATH/gfx/fpdb.png"
+            echo "Converting tribal.jpg to fpdb.png..."
+            convert "$BASE_PATH/gfx/tribal.jpg" "$BASE_PATH/gfx/fpdb.png"
         else
             echo "Erreur : tribal.jpg non trouvé dans $BASE_PATH/gfx/"
             exit 1
@@ -432,20 +440,24 @@ elif [[ "$OS" == "Linux" ]]; then
     fi
 
     # Build HUD_main
+    echo "Building HUD_main..."
     command=$(generate_pyinstaller_command "$SECOND_SCRIPT")
     echo "Exécution : $command"
     eval "$command"
 
     # Build fpdb
+    echo "Building fpdb..."
     command=$(generate_pyinstaller_command "$MAIN_SCRIPT")
     echo "Exécution : $command"
     eval "$command"
 
     # Création de l'AppImage
+    echo "Creating AppImage structure..."
     APP_DIR="$BASE_PATH/AppDir"
     mkdir -p "$APP_DIR/usr/bin"
     mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
 
+    echo "Copying files to AppDir..."
     cp -r "$DIST_DIR/fpdb/"* "$APP_DIR/usr/bin/"
 
     # Copier l'icône en fpdb.png
@@ -453,6 +465,7 @@ elif [[ "$OS" == "Linux" ]]; then
     cp "$BASE_PATH/gfx/fpdb.png" "$APP_DIR/fpdb.png"
 
     # Créer un fichier desktop
+    echo "Creating .desktop file..."
     cat <<EOF > "$APP_DIR/fpdb.desktop"
 [Desktop Entry]
 Name=fpdb
@@ -463,6 +476,7 @@ Categories=Utility;
 EOF
 
     # Création du fichier AppRun
+    echo "Creating AppRun file..."
     cat <<'EOF' > "$APP_DIR/AppRun"
 #!/bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
@@ -473,7 +487,32 @@ EOF
     chmod +x "$APP_DIR/AppRun"
 
     # Créer l'AppImage avec un nom personnalisé en spécifiant l'architecture
-    ARCH=x86_64 ./appimagetool-x86_64.AppImage "$APP_DIR" fpdb-x86_64.AppImage
+    echo "Creating AppImage..."
+    ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APP_DIR" fpdb-x86_64.AppImage
+
+    # Si la création de l'AppImage échoue, essayez l'extraction manuelle
+    if [ $? -ne 0 ]; then
+        echo "AppImage creation failed. Trying manual extraction..."
+        ./appimagetool-x86_64.AppImage --appimage-extract
+        ARCH=x86_64 ./squashfs-root/AppRun "$APP_DIR" fpdb-x86_64.AppImage
+    fi
+
+    if [ -f fpdb-x86_64.AppImage ]; then
+        echo "AppImage created successfully: fpdb-x86_64.AppImage"
+        # Déplacer l'AppImage dans le dossier dist
+        mv fpdb-x86_64.AppImage "$DIST_DIR/"
+        echo "AppImage moved to $DIST_DIR/fpdb-x86_64.AppImage"
+    else
+        echo "Failed to create AppImage"
+        exit 1
+    fi
+
+    # Nettoyage
+    echo "Cleaning up..."
+    rm -rf "$APP_DIR"
+    rm -rf squashfs-root
+
+    echo "Linux build process completed successfully."
 
 elif [[ "$OS" == "MacOS" ]]; then
     # Vérification de l'existence des fichiers
