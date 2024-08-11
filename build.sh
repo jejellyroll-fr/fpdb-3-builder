@@ -45,7 +45,7 @@ if [[ "$OS" == "Windows" ]]; then
     cmake .. -G "Visual Studio 17 2022"
     cmake --build .
 elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
-    cmake ..
+    cmake .. -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC"
     make
 fi
 cd "${BASE_PATH}"
@@ -59,7 +59,7 @@ if [[ "$OS" == "Windows" ]]; then
     cmake .. -G "Visual Studio 17 2022"
     cmake --build .
 elif [[ "$OS" == "Linux" || "$OS" == "MacOS" ]]; then
-    cmake ..
+    cmake .. -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC"
     make
 fi
 cd "${BASE_PATH}"
@@ -409,7 +409,7 @@ elif [[ "$OS" == "Linux" ]]; then
     eval "$command"
 
     # Création de l'AppImage
-    APP_DIR="$BASE_PATH/AppDir"
+APP_DIR="$BASE_PATH/AppDir"
     mkdir -p "$APP_DIR/usr/bin"
     mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
 
