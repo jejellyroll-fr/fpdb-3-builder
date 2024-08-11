@@ -16,6 +16,8 @@ detect_os() {
 OS=$(detect_os)
 echo "Detected OS: $OS"
 
+
+
 WORK_DIR=$(pwd)
 echo "Working directory: $WORK_DIR"
 
@@ -373,17 +375,72 @@ echo "PyInstaller will output to: $DIST_DIR"
 pyinstaller --version
 
 if [[ "$OS" == "Windows" ]]; then
-    # Generate the pyinstaller command
+    echo "Starting Windows build process..."
+
+    # Ensure we're in the correct directory
+    cd "${BASE_PATH}"
+
+    # Build poker-eval
+    echo "Building poker-eval..."
+    cd "${BASE_PATH}/pypoker-eval/poker-eval"
+    mkdir -p build
+    cd build
+    echo "Running CMake for poker-eval..."
+    cmake .. -G "Visual Studio 17 2022" -A x64
+    echo "Building poker-eval with CMake..."
+    cmake --build . --config Release
+    if [ $? -ne 0 ]; then
+        echo "Failed to build poker-eval"
+        exit 1
+    fi
+    cd "${BASE_PATH}"
+
+    # Build pypoker-eval
+    echo "Building pypoker-eval..."
+    cd "${BASE_PATH}/pypoker-eval"
+    mkdir -p build
+    cd build
+    echo "Running CMake for pypoker-eval..."
+    cmake .. -G "Visual Studio 17 2022" -A x64
+    echo "Building pypoker-eval with CMake..."
+    cmake --build . --config Release
+    if [ $? -ne 0 ]; then
+        echo "Failed to build pypoker-eval"
+        exit 1
+    fi
+    cd "${BASE_PATH}"
+
+    # Copy and rename pokereval
+    echo "Copying and renaming pypokereval.dll..."
+    cp "${BASE_PATH}/pypoker-eval/build/Release/pypokereval.dll" "${BASE_PATH}/_pokereval_3_11.pyd"
+    if [ $? -ne 0 ]; then
+        echo "Failed to copy pypokereval.dll"
+        exit 1
+    fi
+
+    # Generate the pyinstaller command for main script
+    echo "Building main script with PyInstaller..."
     command=$(generate_pyinstaller_command "$MAIN_SCRIPT")
-    echo "Exécution : $command"
+    echo "Executing: $command"
     eval "$command"
+    if [ $? -ne 0 ]; then
+        echo "Failed to build main script"
+        exit 1
+    fi
 
+    # Generate the pyinstaller command for HUD script
+    echo "Building HUD script with PyInstaller..."
     command=$(generate_pyinstaller_command "$SECOND_SCRIPT")
-    echo "Exécution : $command"
+    echo "Executing: $command"
     eval "$command"
+    if [ $? -ne 0 ]; then
+        echo "Failed to build HUD script"
+        exit 1
+    fi
 
-    echo "Build success."
+    echo "PyInstaller build completed."
 
+    # Setup output directories
     fpdb_output_dir="$DIST_DIR/fpdb"
     hud_output_dir="$DIST_DIR/HUD_main"
 
@@ -395,16 +452,21 @@ if [[ "$OS" == "Windows" ]]; then
         exit 1
     fi
 
+    # Move and copy files
     fpdb_internal_dir="$fpdb_output_dir/_internal"
     hud_internal_dir="$hud_output_dir/_internal"
 
+    echo "Moving files..."
     move_files "$fpdb_internal_dir" "$fpdb_output_dir"
 
+    echo "Copying folders..."
     copy_and_remove_folders "$fpdb_internal_dir" "$fpdb_output_dir"
 
+    echo "Copying HUD main..."
     copy_hudmain "$hud_output_dir" "$fpdb_output_dir"
 
-    echo "Processus de build et de copie terminé."
+    echo "Windows build process completed successfully."
+fi
 
 elif [[ "$OS" == "Linux" ]]; then
     # Vérification de l'existence des fichiers
