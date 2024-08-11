@@ -466,7 +466,7 @@ if [[ "$OS" == "Windows" ]]; then
     copy_hudmain "$hud_output_dir" "$fpdb_output_dir"
 
     echo "Windows build process completed successfully."
-fi
+
 
 elif [[ "$OS" == "Linux" ]]; then
     # Vérification de l'existence des fichiers
