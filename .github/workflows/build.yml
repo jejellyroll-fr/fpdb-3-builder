@@ -54,6 +54,7 @@ jobs:
         run: |
           cd fpdb-3
           pip install -r requirements.txt
+          pip install cmake
       - name: Build projects
         run: |
           ./build.sh
