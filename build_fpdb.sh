@@ -17,6 +17,7 @@ OS=$(detect_os)
 echo "Detected OS: $OS"
 
 # Define path to base
+cd fpdb-3
 BASE_PATH=$(pwd)
 
 # path to base for Windows
