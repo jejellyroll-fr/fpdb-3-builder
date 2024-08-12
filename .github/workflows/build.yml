@@ -62,9 +62,17 @@ jobs:
           Write-Host "poker-eval library found at $pokerEvalLib"
         } else {
           Write-Host "ERROR: poker-eval library not found at $pokerEvalLib"
+          Write-Host "Contents of the directory:"
+          Get-ChildItem -Path (Split-Path $pokerEvalLib) -Recurse
           exit 1
         }
         
+        # Modify CMakeLists.txt to use the correct path
+        $cmakeListsPath = "..\CMakeLists.txt"
+        $cmakeContent = Get-Content $cmakeListsPath -Raw
+        $cmakeContent = $cmakeContent -replace 'D:/a/fpdb-3-builder/fpdb-3-builder/fpdb-3/pypoker-eval/poker-eval/build/Debug/poker_lib_static.lib', $pokerEvalLib
+        $cmakeContent | Set-Content $cmakeListsPath
+
         cmake .. -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=$pythonExe -DPython3_INCLUDE_DIR=$pythonInclude -DPython3_LIBRARY=$pythonLib -DPOKER_EVAL_LIBRARY=$pokerEvalLib -DCMAKE_BUILD_TYPE=Release
         cmake --build . --config Release
         
@@ -79,8 +87,8 @@ jobs:
     
     - name: Build fpdb-3
       run: |
-        cd fpdb-3
-        python -m PyInstaller --name=fpdb --onedir --windowed --add-data "_pokereval_3_11.pyd;." fpdb.pyw
+        chmaod +x build_fpdb.sh
+        ./build_fpdb.sh
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
