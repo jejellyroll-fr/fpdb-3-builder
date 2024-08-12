@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Package fpdb-3, pypoker-eval, and poker-eval
 
 on:
   push:
@@ -9,47 +9,67 @@ on:
       - main
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install cmake
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          git submodule update --init --recursive
 
-    - name: Configure CMake
-      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+      - name: Build project
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
 
-    - name: Build
-      run: cmake --build build --config Release
+          # Initialize submodules
+          git submodule update --init --recursive
+          
+          # Build poker-eval in Debug mode
+          cd ./poker-eval
+          if (!(Test-Path -Path "build")) {
+              New-Item -ItemType Directory -Force -Path "build"
+          }
+          cd build
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . --config Debug
+          cd ../..
 
-    - name: Run tests
-      run: ctest --test-dir build
+          # Build pypoker-eval in Debug mode
+          if (!(Test-Path -Path "build")) {
+              New-Item -ItemType Directory -Force -Path "build"
+          }
+          cd build
+          $pythonExe = "${{ env.pythonLocation }}\python.exe"
+          $pythonInclude = "${{ env.pythonLocation }}\include"
+          $pythonLib = "${{ env.pythonLocation }}\libs\python311.lib"
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=$pythonExe -DPython3_INCLUDE_DIR=$pythonInclude -DPython3_LIBRARY=$pythonLib -DCMAKE_BUILD_TYPE=Debug
+          cmake --build . --config Debug
+          cd ..
 
-    - name: Copy pypokereval.pyd
-      run: |
-        Copy-Item ".\build\Release\pypokereval.pyd" ".\_pokereval_3_11.pyd"
-    
-    - name: Install PyInstaller
-      run: pip install pyinstaller
-    
-    - name: Build fpdb-3
-      run: |
-        chmaod +x build_fpdb.sh
-        ./build_fpdb.sh
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: fpdb-windows
-        path: fpdb-3/dist/fpdb
+          # Copy and rename the output
+          Copy-Item "./build/Debug/pypokereval.pyd" "./_pokereval_3_11.pyd" -Force
+
+      - name: Create artifact package
+        run: |
+          Copy-Item pokereval.py ./
+          Copy-Item test.py ./
+
+
+      - name: Build fpdb-3
+        run: ./build_fpdb.ps1
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-windows
+          path: dist/*
