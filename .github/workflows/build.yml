@@ -9,78 +9,78 @@ on:
 
 jobs:
   build-windows:
-  runs-on: windows-latest
-  steps:
-  - name: Checkout repository
-    uses: actions/checkout@v3
-    with:
-      submodules: recursive
-  
-  - name: Set up Python 3.11
-    uses: actions/setup-python@v4
-    with:
-      python-version: '3.11'
-  
-  - name: Install dependencies
-    run: |
-      choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-      python -m pip install --upgrade pip
-      python -m pip install setuptools wheel
-      cd fpdb-3
-      python -m pip install -r requirements.txt
-  
-  - name: Build project
-    shell: pwsh
-    run: |
-      Set-StrictMode -Version Latest
-      $ErrorActionPreference = "Stop"
-      
-      # Build poker-eval
-      cd ./fpdb-3/pypoker-eval/poker-eval
-      mkdir build
-      cd build
-      cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-      cmake --build . --config Release
-      
-      # Debug: List contents of build directory
-      Get-ChildItem -Recurse
-      
-      cd ../../../..
-      
-      # Build pypoker-eval
-      cd ./fpdb-3/pypoker-eval
-      Copy-Item ".\pokereval.py" "..\pokereval.py"
-      mkdir build
-      cd build
-      $pythonExe = "${{ env.pythonLocation }}\python.exe"
-      $pythonInclude = "${{ env.pythonLocation }}\include"
-      $pythonLib = "${{ env.pythonLocation }}\libs\python311.lib"
-      $pokerEvalLib = "$env:GITHUB_WORKSPACE\fpdb-3\pypoker-eval\poker-eval\build\Release\poker_lib_static.lib"
-      
-      # Debug: Check if poker-eval library exists
-      if (Test-Path $pokerEvalLib) {
-        Write-Host "poker-eval library found at $pokerEvalLib"
-      } else {
-        Write-Host "ERROR: poker-eval library not found at $pokerEvalLib"
-        exit 1
-      }
-      
-      cmake .. -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=$pythonExe -DPython3_INCLUDE_DIR=$pythonInclude -DPython3_LIBRARY=$pythonLib -DPOKER_EVAL_LIBRARY=$pokerEvalLib -DCMAKE_BUILD_TYPE=Release
-      cmake --build . --config Release
-      
-      # Debug: List contents of build directory
-      Get-ChildItem -Recurse
-      
-      cd ..
-      Copy-Item ".\build\Release\pypokereval.pyd" ".\_pokereval_3_11.pyd" -Force
-  
-  - name: Install PyInstaller
-    run: pip install pyinstaller
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        python -m pip install --upgrade pip
+        python -m pip install setuptools wheel
+        cd fpdb-3
+        python -m pip install -r requirements.txt
+    
+    - name: Build project
+      shell: pwsh
+      run: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = "Stop"
+        
+        # Build poker-eval
+        cd ./fpdb-3/pypoker-eval/poker-eval
+        mkdir build
+        cd build
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+        
+        # Debug: List contents of build directory
+        Get-ChildItem -Recurse
+        
+        cd ../../../..
+        
+        # Build pypoker-eval
+        cd ./fpdb-3/pypoker-eval
+        Copy-Item ".\pokereval.py" "..\pokereval.py"
+        mkdir build
+        cd build
+        $pythonExe = "${{ env.pythonLocation }}\python.exe"
+        $pythonInclude = "${{ env.pythonLocation }}\include"
+        $pythonLib = "${{ env.pythonLocation }}\libs\python311.lib"
+        $pokerEvalLib = "$env:GITHUB_WORKSPACE\fpdb-3\pypoker-eval\poker-eval\build\Release\poker_lib_static.lib"
+        
+        # Debug: Check if poker-eval library exists
+        if (Test-Path $pokerEvalLib) {
+          Write-Host "poker-eval library found at $pokerEvalLib"
+        } else {
+          Write-Host "ERROR: poker-eval library not found at $pokerEvalLib"
+          exit 1
+        }
+        
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DPython3_EXECUTABLE=$pythonExe -DPython3_INCLUDE_DIR=$pythonInclude -DPython3_LIBRARY=$pythonLib -DPOKER_EVAL_LIBRARY=$pokerEvalLib -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+        
+        # Debug: List contents of build directory
+        Get-ChildItem -Recurse
+        
+        cd ..
+        Copy-Item ".\build\Release\pypokereval.pyd" ".\_pokereval_3_11.pyd" -Force
+    
+    - name: Install PyInstaller
+      run: pip install pyinstaller
     
     - name: Build fpdb-3
       run: |
-        chmaod +x build_fpdb.sh
-        ./build_fpdb.sh
+        cd fpdb-3
+        python -m PyInstaller --name=fpdb --onedir --windowed --add-data "_pokereval_3_11.pyd;." fpdb.pyw
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
