@@ -1,118 +1,125 @@
-name: Build Projects
+name: Build pypoker-eval and fpdb-3
+
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd fpdb-3
+        pip install -r requirements.txt
+    - name: Build pypoker-eval
+      run: |
+        cd fpdb-3/pypoker-eval
+        .\build.sh
+    - name: Build fpdb-3
+      run: |
+        .\build_fpdb.sh
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: fpdb-windows
+        path: fpdb-3/dist/*
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Set up Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11.9'
+        python-version: '3.11'
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake build-essential
+        sudo apt-get install -y libxcb1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxkbcommon-x11-0 libxcb-xfixes0 fuse libfuse2
         python -m pip install --upgrade pip
         cd fpdb-3
         pip install -r requirements-linux.txt
-    - name: Build projects
+    - name: Build pypoker-eval
       run: |
-        chmod +x build.sh
+        cd fpdb-3/pypoker-eval
         ./build.sh
-    - name: Upload Linux artifact
+    - name: Build fpdb-3
+      run: |
+        ./build_fpdb-linux.sh
+    - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: fpdb-linux
-        path: dist/*
+        path: fpdb-3/*
 
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11.9'
-      - name: Update PATH
-        run: |
-          echo "C:\hostedtoolcache\windows\Python\3.11.9\x64\Scripts;C:\hostedtoolcache\windows\Python\3.11.9\x64" >> $env:GITHUB_PATH
-      - name: Update pip
-        run: python -m pip install --upgrade pip
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
-      - name: Install Visual Studio Build Tools
-        uses: microsoft/setup-msbuild@v1.1
-      - name: Install dependencies
-        run: |
-          cd fpdb-3
-          pip install -r requirements.txt
-          pip install cmake
-      - name: Build projects
-        run: |
-          chmod +x build.sh
-          ./build.sh
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: fpdb-windows
-          path: dist/*
-
-  build-macos:
+  build-macos-intel:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
       with:
-        submodules: recursive  
-    - name: Set up Python
+        submodules: recursive
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11.9'
+        python-version: '3.11'
     - name: Install dependencies
       run: |
-        brew install cmake
         python -m pip install --upgrade pip
         cd fpdb-3
-        pip install -r requirements-macos.txt
-    - name: Build projects
+        pip install -r requirements_macos.txt
+        brew install pyqt@5
+    - name: Build pypoker-eval
       run: |
-        chmod +x build.sh
+        cd fpdb-3/pypoker-eval
         ./build.sh
-    - name: Upload macOS artifact
+    - name: Build fpdb-3
+      run: |
+        ./build_fpdb-osx.sh
+    - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: fpdb-macos
-        path: dist/fpdb3.app
+        name: fpdb-macos-intel
+        path: fpdb-3/dist/*
 
   build-macos-arm:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
       with:
-        submodules: recursive  
-    - name: Set up Python
+        submodules: recursive
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11.9'
+        python-version: '3.11'
     - name: Install dependencies
       run: |
-        brew install cmake
         python -m pip install --upgrade pip
         cd fpdb-3
-        pip install -r requirements-macos.txt
-    - name: Build projects
+        pip install -r requirements_macos.txt
+        brew install pyqt@5
+    - name: Build pypoker-eval
       run: |
-        chmod +x build.sh
-        arch -arm64 ./build.sh
-    - name: Upload macOS ARM artifact
+        cd fpdb-3/pypoker-eval
+        ./build.sh
+    - name: Build fpdb-3
+      run: |
+        ./build_fpdb-osx.sh
+    - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: fpdb-macos-arm
-        path: dist/*
+        path: fpdb-3/dist/*
