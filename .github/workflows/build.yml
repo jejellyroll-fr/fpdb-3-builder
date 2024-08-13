@@ -168,7 +168,7 @@ jobs:
 
 
   build-macos:
-    runs-on: macos-latest-large
+    runs-on: macos-13
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
