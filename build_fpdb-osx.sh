@@ -17,7 +17,11 @@ OS=$(detect_os)
 echo "Detected OS: $OS"
 
 # Define path to base
+cd fpdb-3
 BASE_PATH=$(pwd)
+
+echo "Contenu du répertoire actuel :"
+ls -la
 
 # Path to base for Windows
 if [ "$OS" = "Windows" ]; then
