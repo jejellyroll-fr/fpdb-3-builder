@@ -19,14 +19,14 @@ fi
 mkdir -p "$dest_dir"
 
 # Copier le fichier de config
-if cp "fpdb-3/HUD_config.xml" "$dest_dir/"; then
+if cp "HUD_config.xml" "$dest_dir/"; then
     echo "Le fichier HUD_config.xml a été copié avec succès dans $dest_dir"
 else
     echo "Erreur lors de la copie du fichier"
     exit 1
 fi
 # Copier le fichier de conf du log
-if cp "fpdb-3/logging.conf" "$dest_dir/"; then
+if cp "logging.conf" "$dest_dir/"; then
     echo "Le fichier HUD_config.xml a été copié avec succès dans $dest_dir"
 else
     echo "Erreur lors de la copie du fichier"

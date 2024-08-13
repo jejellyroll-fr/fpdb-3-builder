@@ -35,6 +35,12 @@ jobs:
         run: bash ./build.sh
         shell: bash
 
+      - name: copy
+        run: |
+          cp fpdb-3/HUD_config.xml fpdb-3/dist/HUD_config.xml
+          cp fpdb-3/logging.conf fpdb-3/dist/logging.conf
+          cp install.sh fpdb-3/dist/install.sh
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -72,6 +78,14 @@ jobs:
 
       - name: Build fpdb-3
         run: bash ./build.sh
+
+
+      - name: copy
+        run: |
+          cp fpdb-3/HUD_config.xml fpdb-3/dist/HUD_config.xml
+          cp fpdb-3/logging.conf fpdb-3/dist/logging.conf
+          cp install.sh fpdb-3/dist/install.sh     
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -138,6 +152,14 @@ jobs:
       - name: Build fpdb-3
         run: |
           ./build_fpdb-osx.sh
+
+
+      - name: copy
+        run: |
+          cp fpdb-3/HUD_config.xml fpdb-3/dist/HUD_config.xml
+          cp fpdb-3/logging.conf fpdb-3/dist/logging.conf
+          cp install.sh fpdb-3/dist/install.sh          
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -214,8 +236,50 @@ jobs:
         run: |
           ./build_fpdb-osx.sh
 
+
+      - name: copy
+        run: |
+          cp fpdb-3/HUD_config.xml fpdb-3/dist/HUD_config.xml
+          cp fpdb-3/logging.conf fpdb-3/dist/logging.conf
+          cp install.sh fpdb-3/dist/install.sh      
+              
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts-macos
           path: fpdb-3/dist/*
+
+  create-release:
+    needs: [build-windows, build-linux, build-macos-arm, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Upload Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for asset in build-artifacts-*/fpdb-3*; do
+            asset_name=$(basename "$asset")
+            echo "Uploading $asset_name"
+            curl -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Content-Type: application/octet-stream" \
+                  --data-binary @"$asset" \
+                  "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$asset_name"
+          done
