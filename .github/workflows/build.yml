@@ -217,6 +217,8 @@ jobs:
       - name: Verify copy
         run: |
           ls -l fpdb-3/pypoker-eval/_pokereval_3_11.so
+          cp fpdb-3/pypoker-eval/_pokereval_3_11.so fpdb-3/_pokereval_3_11.so
+          cp fpdb-3/pypoker-eval/pokereval.py fpdb-3/pokereval.py
 
       - name: Rendre le script exécutable
         run: chmod +x ./build_fpdb-osx.sh
