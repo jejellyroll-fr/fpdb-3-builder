@@ -175,7 +175,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake
-          pip install -r fpdb-3/requirements.txt
+          pip install -r fpdb-3/requirements_macos.txt
 
       - name: Debug Python environment
         run: |
