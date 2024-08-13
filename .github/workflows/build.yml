@@ -40,3 +40,72 @@ jobs:
         with:
           name: build-artifacts-windows
           path: fpdb-3/dist/*
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake
+          git submodule update --init --recursive
+          pip install -r fpdb-3/requirements-linux.txt
+      - name: Build fpdb-3
+        run: bash ./build.sh
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-linux
+          path: fpdb-3/dist/*
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          brew install cmake
+          git submodule update --init --recursive
+          pip install -r fpdb-3/requirements_macos.txt
+      - name: Build fpdb-3
+        run: bash ./build.sh
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-macos
+          path: fpdb-3/dist/*
+
+  build-macos-arm:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          brew install cmake
+          git submodule update --init --recursive
+          pip install -r fpdb-3/requirements.txt
+      - name: Build fpdb-3
+        run: |
+          export ARCHFLAGS="-arch arm64"
+          bash ./build.sh
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-macos-arm
+          path: fpdb-3/dist/*
