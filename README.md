@@ -50,7 +50,7 @@ To build the FPDB-3 project along with its submodules, simply run the following 
   ```bash
   ./fpdb-x86_64.AppImage
   ```
-- For windows or macos, just double clic on fpdb.exe or fpdb.app exectable:
+- For windows or macos, just double clic on fpdb.exe or fpdb3.app exectable:
 
 
 ## Bug Reporting
