@@ -97,21 +97,13 @@ jobs:
           python -m pip install sip==6.6.2 
           pip install -r fpdb-3/requirements_macos.txt
         
-      - name: Set environment variables
-        run: |
-          echo "PYTHON_PATH=$(which python3)" >> $GITHUB_ENV
-          echo "PYTHON_INCLUDE_DIR=$(python3 -c 'import sysconfig; print(sysconfig.get_path(\"include\"))')" >> $GITHUB_ENV
-          echo "PYTHON_LIBRARY=$(python3 -c 'import sysconfig; print(sysconfig.get_config_var(\"LIBDIR\"))')" >> $GITHUB_ENV
 
-      - name: Configure CMake
-        run: |
-          cmake -DPYTHON_EXECUTABLE=$(which python3) \
-                -DPYTHON_INCLUDE_DIR=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))") \
-                -DPYTHON_LIBRARY=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))") \
-                .
 
       - name: Rendre le script exécutable
         run: chmod +x ./build.sh
+        shell: bash
+      - name: Rendre le script exécutable
+        run: chmod +x ./fpdb-3/pypoker-eval/build.sh
         shell: bash
       - name: Rendre le script exécutable
         run: chmod +x ./build_fpdb-osx.sh
@@ -144,16 +136,14 @@ jobs:
           python -m pip install sip==6.6.2 
           pip install -r fpdb-3/requirements_macos.txt
 
-      - name: Check working directory
-        run: |
-          pwd
-          ls -la
-
 
 
 
       - name: Rendre le script exécutable
         run: chmod +x ./build.sh
+        shell: bash
+      - name: Rendre le script exécutable
+        run: chmod +x ./fpdb-3/pypoker-eval/build.sh
         shell: bash
       - name: Rendre le script exécutable
         run: chmod +x ./build_fpdb-osx.sh
