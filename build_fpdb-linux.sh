@@ -26,7 +26,7 @@ if [ ! -f ./appimagetool-x86_64.AppImage ]; then
 fi
 
 # Définir le chemin de base
-BASE_PATH=$(pwd)
+BASE_PATH=$(pwd)/fpdb-3
 
 echo "Chemin de base : $BASE_PATH"
 

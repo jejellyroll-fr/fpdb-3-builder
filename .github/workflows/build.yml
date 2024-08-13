@@ -91,7 +91,7 @@ jobs:
         run: chmod +x ./build.sh
         shell: bash
       - name: Rendre le script exécutable
-        run: chmod +x ./build_fpdb-linux.sh
+        run: chmod +x ./build_fpdb-osx.sh
         shell: bash
 
       - name: Build fpdb-3
@@ -115,7 +115,15 @@ jobs:
         run: |
           brew install cmake
           git submodule update --init --recursive
-          pip install -r fpdb-3/requirements.txt
+          pip install -r fpdb-3/requirements_macos.txt
+
+      - name: Rendre le script exécutable
+        run: chmod +x ./build.sh
+        shell: bash
+      - name: Rendre le script exécutable
+        run: chmod +x ./build_fpdb-osx.sh
+        shell: bash
+
       - name: Build fpdb-3
         run: |
           export ARCHFLAGS="-arch arm64"
