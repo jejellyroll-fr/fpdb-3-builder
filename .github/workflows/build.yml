@@ -32,7 +32,7 @@ jobs:
         shell: bash
 
       - name: Build fpdb-3
-        run: bash ./build_fpdb.sh
+        run: bash ./build.sh
         shell: bash
 
       - name: Archive build artifacts
