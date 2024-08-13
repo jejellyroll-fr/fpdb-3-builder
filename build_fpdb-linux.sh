@@ -19,15 +19,17 @@ if [ "$OS" != "Linux" ]; then
     exit 1
 fi
 
+
+
+# Définir le chemin de base
+cd fpdb-3
+BASE_PATH=$(pwd)
+
 # Téléchargement de appimagetool
 if [ ! -f ./appimagetool-x86_64.AppImage ]; then
     wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
     chmod +x appimagetool-x86_64.AppImage
 fi
-
-# Définir le chemin de base
-cd fpdb-3
-BASE_PATH=$(pwd)
 
 echo "Contenu du répertoire actuel :"
 ls -la
