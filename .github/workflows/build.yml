@@ -148,20 +148,15 @@ jobs:
         run: |
           pwd
           ls -la
-          find . -name CMakeLists.txt
+
 
       - name: Set Python variables
         run: |
-          echo "PYTHON_EXECUTABLE=$(which python3)" >> $GITHUB_ENV
+          echo "PYTHON_PATH=$(which python3)" >> $GITHUB_ENV
           echo "PYTHON_INCLUDE_DIR=$(python3 -c 'import sysconfig; print(sysconfig.get_path("include"))')" >> $GITHUB_ENV
           echo "PYTHON_LIBRARY=$(python3 -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')/libpython$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")').dylib" >> $GITHUB_ENV
 
-      - name: Configure CMake
-        run: |
-          cmake -DPYTHON_EXECUTABLE=${{ env.PYTHON_EXECUTABLE }} \
-                -DPYTHON_INCLUDE_DIR=${{ env.PYTHON_INCLUDE_DIR }} \
-                -DPYTHON_LIBRARY=${{ env.PYTHON_LIBRARY }} \
-                .
+
 
       - name: Rendre le script exécutable
         run: chmod +x ./build.sh
