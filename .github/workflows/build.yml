@@ -54,8 +54,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake
+          sudo apt-get install -y libxcb1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxkbcommon-x11-0 libxcb-xfixes0 fuse libfuse2
+          sudo modprobe fuse
+          sudo groupadd fuse
+          sudo usermod -a -G fuse $USER
           git submodule update --init --recursive
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r fpdb-3/requirements-linux.txt
+
 
       - name: Rendre le script exécutable
         run: chmod +x ./build.sh
@@ -85,6 +91,10 @@ jobs:
         run: |
           brew install cmake
           git submodule update --init --recursive
+          python -m pip install --upgrade pip setuptools wheel
+          brew info pyqt@5
+          brew install pyqt@5
+          python -m pip install sip==6.6.2 
           pip install -r fpdb-3/requirements_macos.txt
 
       - name: Rendre le script exécutable
@@ -115,6 +125,10 @@ jobs:
         run: |
           brew install cmake
           git submodule update --init --recursive
+          python -m pip install --upgrade pip setuptools wheel
+          brew info pyqt@5
+          brew install pyqt@5
+          python -m pip install sip==6.6.2 
           pip install -r fpdb-3/requirements_macos.txt
 
       - name: Rendre le script exécutable
