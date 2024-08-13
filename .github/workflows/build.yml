@@ -158,3 +158,59 @@ jobs:
         with:
           name: build-artifacts-macos-arm
           path: fpdb-3/dist/*
+
+  build-macos-test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          brew install cmake
+          pip install -r fpdb-3/requirements_macos.txt
+
+      - name: Debug Python environment
+        run: |
+          which python3
+          python3 --version
+          echo "PYTHON_PATH: $pythonLocation/bin/python3"
+          echo "PYTHON_INCLUDE_DIR: $pythonLocation/include/python3.11"
+          echo "PYTHON_LIBRARY: $pythonLocation/lib/libpython3.11.dylib"
+          ls -l $pythonLocation/bin
+          ls -l $pythonLocation/include
+          ls -l $pythonLocation/lib
+          cmake --version
+
+      - name: Build pypoker-eval
+        run: |
+          cd fpdb-3/pypoker-eval
+          mkdir -p build && cd build
+          cmake -DPython3_EXECUTABLE=$pythonLocation/bin/python3 \
+                -DPython3_INCLUDE_DIR=$pythonLocation/include/python3.11 \
+                -DPython3_LIBRARY=$pythonLocation/lib/libpython3.11.dylib \
+                ..
+          make
+          cd ../..
+          cp build/pypokereval.so _pokereval_3_11.so
+
+      - name: Rendre le script exécutable
+        run: chmod +x ./build_fpdb-osx.sh
+        shell: bash
+
+      - name: Build fpdb-3
+        run: |
+          ./build_fpdb-osx.sh
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts-macos
+          path: fpdb-3/dist/*
