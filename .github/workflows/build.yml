@@ -205,9 +205,18 @@ jobs:
                 -DPython3_INCLUDE_DIR=$pythonLocation/include/python3.11 \
                 -DPython3_LIBRARY=$pythonLocation/lib/libpython3.11.dylib \
                 ..
-          make
+          make VERBOSE=1
+          echo "Contents of build directory:"
+          ls -R
           cd ../..
-          cp build/pypokereval.so _pokereval_3_11.so
+      
+      - name: Copy pypokereval.so
+        run: |
+          find fpdb-3/pypoker-eval/build -name "pypokereval*.so" -exec cp {} fpdb-3/pypoker-eval/_pokereval_3_11.so \;
+      
+      - name: Verify copy
+        run: |
+          ls -l fpdb-3/pypoker-eval/_pokereval_3_11.so
 
       - name: Rendre le script exécutable
         run: chmod +x ./build_fpdb-osx.sh
