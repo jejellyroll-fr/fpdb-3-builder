@@ -27,8 +27,13 @@ jobs:
           pip install -r fpdb-3/requirements.txt
 
 
+      - name: Rendre le script exécutable
+        run: chmod +x ./build.sh
+        shell: bash
+
       - name: Build fpdb-3
-        run: ./build_fpdb.sh
+        run: bash ./build_fpdb.sh
+        shell: bash
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
