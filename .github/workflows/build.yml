@@ -56,6 +56,14 @@ jobs:
           sudo apt-get install -y cmake
           git submodule update --init --recursive
           pip install -r fpdb-3/requirements-linux.txt
+
+      - name: Rendre le script exécutable
+        run: chmod +x ./build.sh
+        shell: bash
+      - name: Rendre le script exécutable
+        run: chmod +x ./build_fpdb-linux.sh
+        shell: bash
+
       - name: Build fpdb-3
         run: bash ./build.sh
       - name: Archive build artifacts
@@ -78,6 +86,14 @@ jobs:
           brew install cmake
           git submodule update --init --recursive
           pip install -r fpdb-3/requirements_macos.txt
+
+      - name: Rendre le script exécutable
+        run: chmod +x ./build.sh
+        shell: bash
+      - name: Rendre le script exécutable
+        run: chmod +x ./build_fpdb-linux.sh
+        shell: bash
+
       - name: Build fpdb-3
         run: bash ./build.sh
       - name: Archive build artifacts
