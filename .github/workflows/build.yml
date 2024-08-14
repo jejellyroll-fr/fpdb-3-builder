@@ -168,12 +168,13 @@ jobs:
 
 
   build-macos:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
+
       - name: Build Docker Image
         run: docker build -t my-macos-build .
 
