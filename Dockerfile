@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libxmlsec1-dev \
     libffi-dev \
-    liblzma-dev
+    liblzma-dev \
+    sudo
 
 # Télécharger et installer Python 3.11
 RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz && \
@@ -25,19 +26,29 @@ RUN wget https://www.python.org/ftp/python/3.11.0/Python-3.11.0.tgz && \
     cd Python-3.11.0 && \
     ./configure --enable-optimizations && \
     make -j $(nproc) && \
-    make altinstall
+    make altinstall && \
+    rm -rf Python-3.11.0 Python-3.11.0.tgz
 
-# Supprimer les fichiers de l'installation pour économiser de l'espace
-RUN rm -rf Python-3.11.0 Python-3.11.0.tgz
+# Créer un utilisateur non-root pour installer Homebrew
+RUN useradd -m brewuser && echo "brewuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+USER brewuser
+WORKDIR /home/brewuser
 
-# Installer Homebrew et les dépendances MacOS via brew
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Installer Homebrew et ajouter au PATH
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/brewuser/.profile
+
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
+
+# Installer les dépendances MacOS via Homebrew
 RUN brew install cmake
+
+# Revenir à l'utilisateur root pour le reste du Dockerfile
+USER root
+WORKDIR /app
 
 # Copier le projet dans le conteneur
 COPY . /app
-WORKDIR /app
 
 # Installer les dépendances Python
 RUN pip3.11 install -r fpdb-3/requirements_macos.txt
@@ -60,4 +71,5 @@ RUN find fpdb-3/pypoker-eval/build -name "pypokereval.so" -exec cp {} fpdb-3/pyp
 
 # Construire le projet final
 RUN chmod +x ./build_fpdb-osx.sh && ./build_fpdb-osx.sh
+
 
