@@ -2,8 +2,12 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-bullseye
 
 # Installer les dépendances nécessaires
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
     cmake \
     python3.11 \
+    python3.11-venv \
     python3-pip \
     build-essential
 
@@ -29,7 +33,7 @@ RUN cd fpdb-3/pypoker-eval/poker-eval && \
 # Construire pypoker-eval
 RUN cd fpdb-3/pypoker-eval && \
     mkdir -p build && cd build && \
-    cmake -DPython3_EXECUTABLE=$(which python3) \
+    cmake -DPython3_EXECUTABLE=$(which python3.11) \
           -DPython3_INCLUDE_DIR=/usr/include/python3.11 \
           -DPython3_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.11.so \
           .. && make
