@@ -237,6 +237,11 @@ eval "$command"
 
 echo "fpdb build success."
 
+# Ensure executables are properly set
+chmod +x "$APP_DIR/$APP_NAME"
+chmod +x "$RES_DIR/fpdb"
+chmod +x "$RES_DIR/_internal/_internal/HUD_main"
+
 # Copy HUD_main _internal to fpdb
 echo "Copying HUD_main _internal to fpdb"
 if [ -d "$BASE_PATH/dist/HUD_main/_internal" ]; then
