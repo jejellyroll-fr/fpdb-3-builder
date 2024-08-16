@@ -237,16 +237,17 @@ eval "$command"
 
 echo "fpdb build success."
 
-# Ensure executables are properly set
-chmod +x "$APP_DIR/$APP_NAME"
-chmod +x "$RES_DIR/fpdb"
-chmod +x "$RES_DIR/_internal/_internal/HUD_main"
+
+
+
+
 
 # Copy HUD_main _internal to fpdb
 echo "Copying HUD_main _internal to fpdb"
 if [ -d "$BASE_PATH/dist/HUD_main/_internal" ]; then
     cp -R "$BASE_PATH/dist/HUD_main/_internal" "$BASE_PATH/dist/fpdb/"
     cp "$BASE_PATH/dist/HUD_main/HUD_main" "$BASE_PATH/dist/fpdb/_internal/"
+    chmod +x "$BASE_PATH/dist/fpdb/_internal/_internal/HUD_main"
     echo "HUD_main _internal folder copied successfully."
 else
     echo "Error: HUD_main _internal folder not found."
@@ -265,6 +266,7 @@ if [ "$OS" = "MacOS" ]; then
 
     # Copy built files to AppDir, including the first _internal
     cp -R "$BASE_PATH/dist/fpdb/"* "$RES_DIR/"
+    chmod +x "$RES_DIR/fpdb"
 
     # Create the nested _internal structure
     mkdir -p "$RES_DIR/_internal/_internal"
@@ -289,6 +291,7 @@ EOF
 
     # Make launcher executable
     chmod +x "$APP_DIR/$APP_NAME"
+
 
     # Create Info.plist
     cat <<EOF >"$BASE_PATH/dist/$APP_NAME.app/Contents/Info.plist"
