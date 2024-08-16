@@ -237,18 +237,31 @@ eval "$command"
 
 echo "fpdb build success."
 
+# Check structure after builds
+echo "Structure after HUD_main build:"
+ls -R "$BASE_PATH/dist/HUD_main"
 
-
-
-
+echo "Structure after fpdb build:"
+ls -R "$BASE_PATH/dist/fpdb"
 
 # Copy HUD_main _internal to fpdb
 echo "Copying HUD_main _internal to fpdb"
 if [ -d "$BASE_PATH/dist/HUD_main/_internal" ]; then
-    cp -R "$BASE_PATH/dist/HUD_main/_internal" "$BASE_PATH/dist/fpdb/"
-    cp "$BASE_PATH/dist/HUD_main/HUD_main" "$BASE_PATH/dist/fpdb/_internal/"
-    chmod +x "$BASE_PATH/dist/fpdb/_internal/_internal/HUD_main"
-    echo "HUD_main _internal folder copied successfully."
+    mkdir -p "$BASE_PATH/dist/fpdb/_internal"
+    cp -R "$BASE_PATH/dist/HUD_main/_internal" "$BASE_PATH/dist/fpdb/_internal/"
+    if [ -f "$BASE_PATH/dist/HUD_main/HUD_main" ]; then
+        cp "$BASE_PATH/dist/HUD_main/HUD_main" "$BASE_PATH/dist/fpdb/_internal/"
+        if [ -f "$BASE_PATH/dist/fpdb/_internal/HUD_main" ]; then
+            chmod +x "$BASE_PATH/dist/fpdb/_internal/HUD_main"
+            echo "HUD_main _internal folder and executable copied successfully."
+        else
+            echo "Error: HUD_main executable not copied correctly."
+            exit 1
+        fi
+    else
+        echo "Error: HUD_main executable not found."
+        exit 1
+    fi
 else
     echo "Error: HUD_main _internal folder not found."
     exit 1
@@ -264,15 +277,30 @@ if [ "$OS" = "MacOS" ]; then
     mkdir -p "$APP_DIR"
     mkdir -p "$RES_DIR"
 
-    # Copy built files to AppDir, including the first _internal
-    cp -R "$BASE_PATH/dist/fpdb/"* "$RES_DIR/"
-    chmod +x "$RES_DIR/fpdb"
+    # Copy built files to AppDir
+    if [ -d "$BASE_PATH/dist/fpdb" ]; then
+        cp -R "$BASE_PATH/dist/fpdb/"* "$RES_DIR/"
+        if [ -f "$RES_DIR/fpdb" ]; then
+            chmod +x "$RES_DIR/fpdb"
+        else
+            echo "Error: fpdb executable not found in Resources."
+            exit 1
+        fi
+    else
+        echo "Error: fpdb folder not found in dist."
+        exit 1
+    fi
 
     # Create the nested _internal structure
     mkdir -p "$RES_DIR/_internal/_internal"
 
     # Copy the content of the original _internal to the nested _internal
-    cp -R "$BASE_PATH/dist/fpdb/_internal/"* "$RES_DIR/_internal/_internal/"
+    if [ -d "$BASE_PATH/dist/fpdb/_internal" ]; then
+        cp -R "$BASE_PATH/dist/fpdb/_internal/"* "$RES_DIR/_internal/_internal/"
+    else
+        echo "Error: _internal folder not found in fpdb."
+        exit 1
+    fi
 
     echo "Nested _internal structure created successfully."
 
@@ -291,7 +319,6 @@ EOF
 
     # Make launcher executable
     chmod +x "$APP_DIR/$APP_NAME"
-
 
     # Create Info.plist
     cat <<EOF >"$BASE_PATH/dist/$APP_NAME.app/Contents/Info.plist"
@@ -341,9 +368,19 @@ EOF
 
     # Check if HUD_main _internal is in the correct location
     if [ -d "$RES_DIR/_internal/_internal" ] && [ -f "$RES_DIR/_internal/_internal/HUD_main" ]; then
-        echo "HUD_main _internal found in the correct nested location."
+        chmod +x "$RES_DIR/_internal/_internal/HUD_main"
+        echo "HUD_main _internal found in the correct nested location and made executable."
     else
         echo "Error: HUD_main _internal not found in the nested structure in $RES_DIR"
+        exit 1
+    fi
+
+    # Check fpdb executable
+    if [ -f "$RES_DIR/fpdb" ]; then
+        chmod +x "$RES_DIR/fpdb"
+        echo "fpdb executable found and made executable."
+    else
+        echo "Error: fpdb executable not found in $RES_DIR"
         exit 1
     fi
 
@@ -364,7 +401,6 @@ EOF
     rm -rf "$BASE_PATH/build"
     rm -rf "$BASE_PATH/dist/fpdb"
     rm -rf "$BASE_PATH/dist/HUD_main"
-
 
     echo "Cleanup completed. Only $APP_NAME.app remains in the dist folder."
 fi
