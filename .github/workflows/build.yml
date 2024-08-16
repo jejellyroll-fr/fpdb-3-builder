@@ -163,7 +163,7 @@ jobs:
       - name: Archive build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts-macos-arm
+          name: build-artifacts-macos14-arm
           path: fpdb-3/dist/*
 
   build-macos13-arm:
