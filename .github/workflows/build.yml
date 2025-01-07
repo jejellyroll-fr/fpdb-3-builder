@@ -82,6 +82,8 @@ jobs:
 
       - name: copy
         run: |
+          ls -al
+          mkdir -p fpdb-3/dist
           cp fpdb-3/HUD_config.xml fpdb-3/dist/HUD_config.xml
           cp fpdb-3/logging.conf fpdb-3/dist/logging.conf
           cp install.sh fpdb-3/dist/install.sh     
