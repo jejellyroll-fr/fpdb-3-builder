@@ -128,7 +128,6 @@ FOLDERS=(
     "icons"
     "fonts"
     "locale"
-    "static"
     "utils"
 )
 
