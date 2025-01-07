@@ -120,6 +120,7 @@ FILES=(
     "WinTables.py"
     "XTables.py"
     "pokereval.py"
+    "loggingFpdb.py"
     "_pokereval_3_11.so"
 )
 
